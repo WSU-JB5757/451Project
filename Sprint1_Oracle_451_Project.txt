@@ -1,0 +1,99 @@
+
+CREATE TABLE PROJECTCAMPAIGN
+( 
+campaign_id NUMBER,
+title VARCHAR2(255), 
+start_date DATE NOT NULL, 
+end_date DATE NOT NULL, 
+funding_goal DECIMAL(19,4) NOT NULL, 
+funding_received DECIMAL(19,4) DEFAULT 0, 
+description VARCHAR2(255) NOT NULL, 
+CONSTRAINT campaign_pk PRIMARY KEY (campaign_id)
+);
+
+
+CREATE TABLE PROJECTUSER
+( 
+user_id NUMBER,
+first_name VARCHAR2(255) NOT NULL, 
+last_name VARCHAR2(255) NOT NULL, 
+password_hash VARCHAR2(255) NOT NULL,  
+role VARCAHR2(20) CHECK(role IN(('user','admin'))
+);
+
+CREATE TABLE PROJECTTRANSACTION
+( 
+transaction_id NUMBER,
+campaign_id NUMBER, 
+user_id NUMBER, 
+authorization_num VARCHAR2(255) NOT NULL,
+payment_type VARCHAR2(255) NOT NULL,
+payment_date DATE NOT NULL, 
+amount DECIMAL(19,4) NOT NULL, CHECK(amount>0),
+CONSTRAINT fk_campaign FOREIGN KEY (campaign_id) REFERENCES ProjectCampaign(campaign_id),
+CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES ProjectUser(user_id),
+CONSTRAINT pk_transaction PRIMARY KEY (transaction_id)
+);
+
+Oracle recommended:
+
+INSERT INTO PROJECTCAMPAIGN (
+    CAMPAIGN_ID,
+    TITLE,
+    START_DATE,
+    END_DATE,
+    FUNDING_GOAL,
+    FUNDING_RECEIVED,
+    DESCRIPTION
+) VALUES ( 1,
+           'campaigntest1',
+           TO_DATE('15-03-2026', 'DD-MM-YYYY'),
+           TO_DATE('16-03-2026', 'DD-MM-YYYY'),
+           100.01,
+           1.01,
+           'A test record for campaign table';
+
+INSERT INTO PROJECTTRANSACTION (
+    TRANSACTION_ID,
+    CAMPAIGN_ID,
+    USER_ID,
+    AUTHORIZATION_NUM,
+    PAYMENT_TYPE,
+    PAYMENT_DATE,
+    AMOUNT
+) VALUES ( 1,
+           1,
+           1,
+           'T001',
+           'credit_card',
+           TO_DATE('15-03-2026', 'DD-MM-YYYY'),
+           10.01 );
+
+INSERT INTO PROJECTUSER (
+    USER_ID,
+    FIRST_NAME,
+    LAST_NAME,
+    PASSWORD_HASH,
+    ROLE
+) VALUES ( 1,
+           'Test',
+           'User',
+           'password',
+           'user' );
+
+Display whole table:
+
+SELECT
+*
+FROM
+    PROJECTCAMPAIGN;
+
+SELECT
+*
+FROM
+    PROJECTUSER;
+
+SELECT
+*
+FROM
+    PROJECTTRANSACTION;
