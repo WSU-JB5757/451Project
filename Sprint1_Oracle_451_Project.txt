@@ -51,7 +51,7 @@ INSERT INTO PROJECTCAMPAIGN (
            TO_DATE('16-03-2026', 'DD-MM-YYYY'),
            100.01,
            1.01,
-           'A test record for campaign table';
+           'A test record for campaign table');
 
 INSERT INTO PROJECTTRANSACTION (
     TRANSACTION_ID,
