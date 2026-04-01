@@ -1,0 +1,280 @@
+
+CREATE TABLE PROJECTCAMPAIGN
+( 
+campaign_id NUMBER,
+title VARCHAR2(255), 
+start_date DATE NOT NULL, 
+end_date DATE NOT NULL, 
+funding_goal DECIMAL(19,4) NOT NULL,
+description VARCHAR2(255) NOT NULL, 
+CONSTRAINT campaign_pk PRIMARY KEY (campaign_id)
+);
+
+
+CREATE TABLE PROJECTUSER
+( 
+user_id NUMBER,
+first_name VARCHAR2(255) NOT NULL, 
+last_name VARCHAR2(255) NOT NULL, 
+password_hash VARCHAR2(255) NOT NULL,  
+role VARCAHR2(20) CHECK(role IN('user','admin'))
+);
+
+CREATE TABLE PROJECTTRANSACTION
+( 
+transaction_id NUMBER,
+campaign_id NUMBER, 
+user_id NUMBER, 
+authorization_num VARCHAR2(255) NOT NULL,
+payment_type VARCHAR2(255) NOT NULL,
+payment_date DATE NOT NULL, 
+amount DECIMAL(19,4) NOT NULL, CHECK(amount>0),
+CONSTRAINT fk_campaign FOREIGN KEY (campaign_id) REFERENCES ProjectCampaign(campaign_id),
+CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES ProjectUser(user_id),
+CONSTRAINT pk_transaction PRIMARY KEY (transaction_id)
+);
+
+CREATE TABLE PROJECTEMAIL
+( 
+user_id NUMBER, 
+email VARCHAR2(255) NOT NULL,
+CONSTRAINT fk_useremail FOREIGN KEY (user_id) REFERENCES ProjectUser(user_id),
+CONSTRAINT pk_email PRIMARY KEY (user_id, email)
+);
+
+CREATE TABLE PROJECTSOCIALMEDIA
+( 
+user_id NUMBER, 
+socialmedia VARCHAR2(255) NOT NULL,
+CONSTRAINT fk_usersocialmedia FOREIGN KEY (user_id) REFERENCES ProjectUser(user_id),
+CONSTRAINT pk_socialmedia PRIMARY KEY (user_id, socialmedia)
+);
+
+CREATE TABLE PROJECTUSERCAMPAIGN
+( 
+campaign_id NUMBER,
+user_id NUMBER,
+CONSTRAINT fk_campaignuser FOREIGN KEY (campaign_id) REFERENCES ProjectCampaign(campaign_id),
+CONSTRAINT fk_usercompaign FOREIGN KEY (user_id) REFERENCES ProjectUser(user_id),
+CONSTRAINT pk_ PRIMARY KEY (campaign_id, user_id)
+);
+
+Oracle recommended:
+
+INSERT INTO PROJECTCAMPAIGN (
+    CAMPAIGN_ID,
+    TITLE,
+    START_DATE,
+    END_DATE,
+    FUNDING_GOAL,
+    FUNDING_RECEIVED,
+    DESCRIPTION
+) VALUES ( 1,
+           'campaigntest1',
+           TO_DATE('15-03-2026', 'DD-MM-YYYY'),
+           TO_DATE('16-03-2026', 'DD-MM-YYYY'),
+           100.01,
+           1.01,
+           'A test record for campaign table');
+
+INSERT INTO PROJECTTRANSACTION (
+    TRANSACTION_ID,
+    CAMPAIGN_ID,
+    USER_ID,
+    AUTHORIZATION_NUM,
+    PAYMENT_TYPE,
+    PAYMENT_DATE,
+    AMOUNT
+) VALUES ( 1,
+           1,
+           1,
+           'T001',
+           'credit_card',
+           TO_DATE('15-03-2026', 'DD-MM-YYYY'),
+           10.01 );
+
+INSERT INTO PROJECTUSER (
+    USER_ID,
+    FIRST_NAME,
+    LAST_NAME,
+    PASSWORD_HASH,
+    ROLE
+) VALUES ( 1,
+           'Test',
+           'User',
+           'password',
+           'user' );
+
+Display whole table:
+
+SELECT
+*
+FROM
+    PROJECTCAMPAIGN;
+
+SELECT
+*
+FROM
+    PROJECTUSER;
+
+SELECT
+*
+FROM
+    PROJECTTRANSACTION;
+
+Create a new user:
+
+INSERT INTO PROJECTUSER (
+    USER_ID,
+    FIRST_NAME,
+    LAST_NAME,
+    PASSWORD_HASH,
+    ROLE
+) VALUES ( 5,
+           'Bill',
+           'Purrin',
+           'password123',
+           'user' );
+
+INSERT INTO PROJECTEMAIL (
+    USER_ID,
+    EMAIL
+) VALUES ( 5,
+           'billyp1@gmail.com' );
+
+INSERT INTO PROJECTEMAIL (
+    USER_ID,
+    EMAIL
+) VALUES ( 5,
+           'billygoat1@gmail.com' );
+
+INSERT INTO PROJECTSOCIALMEDIA (
+    USER_ID,
+    SOCIALMEDIA
+) VALUES ( 5,
+           'billybilly@facebook.com' );
+
+Admin creates a new campaign:
+
+INSERT INTO PROJECTCAMPAIGN (
+    CAMPAIGN_ID,
+    TITLE,
+    START_DATE,
+    END_DATE,
+    FUNDING_GOAL,
+    FUNDING_RECEIVED,
+    DESCRIPTION
+) VALUES ( 3,
+           'Better Living through Tacos',
+           TO_DATE('31-03-2026', 'DD-MM-YYYY'),
+           TO_DATE('16-06-2026', 'DD-MM-YYYY'),
+           100.01,
+           1.01,
+           'The sequel to my self-help book Insights on Extra Cheese. Better Living through Tacos explores the fast-food versus fine-dining taco in us all. I request donations from the small but dedicated food-based self-help book lovers.');
+
+User makes a new donation for a campaign:
+
+INSERT INTO PROJECTTRANSACTION (
+    TRANSACTION_ID,
+    CAMPAIGN_ID,
+    USER_ID,
+    AUTHORIZATION_NUM,
+    PAYMENT_TYPE,
+    PAYMENT_DATE,
+    AMOUNT
+) VALUES ( 4,
+           3,
+           5,
+           'TACO4',
+           'billy_credit_card',
+           TO_DATE('31-03-2026', 'DD-MM-YYYY'),
+           5.01 );
+
+Admin removing an unneeded column from PROJECTCAMPAIGN:
+
+ALTER TABLE PROJECTCAMPAIGN 
+DROP COLUMN funding_received;
+
+User changes email:
+
+UPDATE PROJECTEMAIL
+SET email = 'billynewemail@gmail.com'
+WHERE email = 'billyp1@gmail.com';
+
+Admin changes campaign description:
+
+UPDATE PROJECTCAMPAIGN
+SET description = 'The sequel to my self-help book Insights on Beans. Better Living through Tacos explores the fast-food versus fine-dining taco in us all. I request donations from the small but dedicated food-based self-help book lovers.'
+WHERE campaign_id = 3;
+
+Admin changes campaign end-date:
+
+UPDATE PROJECTCAMPAIGN
+SET end_date = TO_DATE('30-06-2026', 'DD-MM-YYYY')
+WHERE campaign_id = 3;
+
+Admin attempts to delete a user: (Note: this fails, and we want it to)
+
+DELETE FROM PROJECTUSER
+WHERE user_id = 5;
+
+Admin attempts to delete a campaign: (Note: this fails, and we want it to)
+
+DELETE FROM PROJECTCAMPAIGN
+WHERE campaign_id = 3;
+
+Admin queries the full name of the users:
+
+SELECT first_name || ' ' || last_name AS full_name
+FROM PROJECTUSER;
+
+Admin queries the total donations for a campaign:
+
+SELECT sum(amount) total_donations
+FROM PROJECTTRANSACTION
+WHERE campaign_id = 3;
+
+User asks to list their donation amounts and dates
+
+SELECT amount, payment_date
+FROM PROJECTTRANSACTION
+WHERE user_id = 5;
+
+Insert connecting values into PROJECTUSERCAMPAIGN:
+
+INSERT INTO PROJECTUSERCAMPAIGN (
+    CAMPAIGN_ID,
+    USER_ID
+) VALUES ( 3,
+           5);
+
+Display user first and last name with the amount donated by them
+
+SELECT first_name, last_name, amount FROM PROJECTUSER, PROJECTTRANSACTION
+WHERE PROJECTUSER.user_id = PROJECTTRANSACTION.user_id;
+
+Display campaign title with the amounts donated
+
+SELECT title, amount FROM PROJECTCAMPAIGN, PROJECTTRANSACTION
+WHERE PROJECTCAMPAIGN.campaign_id = PROJECTTRANSACTION.campaign_id;
+
+Display transaction amount with payment date and user last name
+
+SELECT amount, payment_date, last_name FROM PROJECTTRANSACTION, PROJECTUSER
+WHERE PROJECTUSER.user_id = PROJECTTRANSACTION.user_id;
+
+Display the user first and last name with the corresponding emails.
+
+SELECT first_name, last_name, email FROM PROJECTUSER, PROJECTEMAIL
+WHERE PROJECTUSER.user_id = PROJECTEMAIL.user_id;
+
+Display the user first and last name with the corresponding social medias.
+
+SELECT first_name, last_name, socialmedia FROM PROJECTUSER, PROJECTSOCIALMEDIA
+WHERE PROJECTUSER.user_id = PROJECTSOCIALMEDIA.user_id;
+
+Display users who donated amounts greater than 20 dollars
+
+SELECT first_name, last_name, amount FROM PROJECTUSER, PROJECTTRANSACTION
+WHERE PROJECTUSER.user_id = PROJECTTRANSACTION.user_id
+AND PROJECTTRANSACTION.amount > 20;
