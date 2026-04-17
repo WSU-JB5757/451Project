@@ -1,0 +1,283 @@
+
+CREATE TABLE PROJECTCAMPAIGNREV
+( 
+campaign_id NUMBER,
+start_date DATE NOT NULL, 
+end_date DATE NOT NULL, 
+funding_goal DECIMAL(19,4) NOT NULL, 
+CONSTRAINT campaign_pk_rev PRIMARY KEY (campaign_id)
+);
+
+CREATE TABLE PROJECTCAMPAIGNTITLEREV
+( 
+campaign_id NUMBER,
+title VARCHAR2(255), 
+description VARCHAR2(255) NOT NULL, 
+CONSTRAINT fk_campaigntitle_rev FOREIGN KEY (campaign_id) REFERENCES ProjectCampaignRev(campaign_id),
+CONSTRAINT pk_camp_title_rev PRIMARY KEY (campaign_id, title)
+);
+
+CREATE TABLE PROJECTUSERREV
+( 
+user_id NUMBER,
+first_name VARCHAR2(255) NOT NULL, 
+last_name VARCHAR2(255) NOT NULL, 
+password_hash VARCHAR2(255) NOT NULL,  
+role VARCHAR2(20) CHECK(role IN('user','admin'))
+CONSTRAINT user_pk_rev PRIMARY KEY (user_id)
+);
+
+CREATE TABLE PROJECTTRANSACTIONREV
+( 
+transaction_id NUMBER,
+campaign_id NUMBER, 
+user_id NUMBER, 
+authorization_num VARCHAR2(255) NOT NULL,
+payment_type VARCHAR2(255) NOT NULL,
+payment_date DATE NOT NULL, 
+amount DECIMAL(19,4) NOT NULL, CHECK(amount>0),
+CONSTRAINT fk_campaigntrans_rev FOREIGN KEY (campaign_id) REFERENCES ProjectCampaignRev(campaign_id),
+CONSTRAINT fk_user_rev FOREIGN KEY (user_id) REFERENCES ProjectUserRev(user_id),
+CONSTRAINT pk_transaction_rev PRIMARY KEY (transaction_id)
+);
+
+CREATE TABLE PROJECTEMAILREV
+( 
+user_id NUMBER, 
+email VARCHAR2(255) NOT NULL,
+CONSTRAINT fk_useremail_rev FOREIGN KEY (user_id) REFERENCES ProjectUserRev(user_id),
+CONSTRAINT pk_email_rev PRIMARY KEY (user_id, email)
+);
+
+CREATE TABLE PROJECTSOCIALMEDIAREV
+( 
+user_id NUMBER, 
+socialmedia VARCHAR2(255) NOT NULL,
+CONSTRAINT fk_usersocialmedia_rev FOREIGN KEY (user_id) REFERENCES ProjectUserRev(user_id),
+CONSTRAINT pk_socialmedia_rev PRIMARY KEY (user_id, socialmedia)
+);
+
+CREATE TABLE PROJECTUSERCAMPAIGNREV
+( 
+campaign_id NUMBER,
+user_id NUMBER,
+CONSTRAINT fk_campaignuser_rev FOREIGN KEY (campaign_id) REFERENCES ProjectCampaignRev(campaign_id),
+CONSTRAINT fk_usercampaign_rev FOREIGN KEY (user_id) REFERENCES ProjectUserRev(user_id),
+CONSTRAINT pk_user_campaign_rev PRIMARY KEY (campaign_id, user_id)
+);
+
+Oracle recommended:
+
+INSERT INTO PROJECTCAMPAIGNREV (
+    CAMPAIGN_ID,
+    START_DATE,
+    END_DATE,
+    FUNDING_GOAL
+) VALUES ( 1,
+           TO_DATE('15-03-2026', 'DD-MM-YYYY'),
+           TO_DATE('16-03-2026', 'DD-MM-YYYY'),
+           100.01
+           );
+
+INSERT INTO PROJECTCAMPAIGNTITLEREV (
+    CAMPAIGN_ID,
+    TITLE,
+    DESCRIPTION
+) VALUES ( 1,
+           'campaigntest1',
+           'A test record for campaign table');
+
+INSERT INTO PROJECTUSERREV (
+    USER_ID,
+    FIRST_NAME,
+    LAST_NAME,
+    PASSWORD_HASH,
+    ROLE
+) VALUES ( 1,
+           'Test',
+           'User',
+           'password',
+           'user' );
+
+INSERT INTO PROJECTTRANSACTIONREV (
+    TRANSACTION_ID,
+    CAMPAIGN_ID,
+    USER_ID,
+    AUTHORIZATION_NUM,
+    PAYMENT_TYPE,
+    PAYMENT_DATE,
+    AMOUNT
+) VALUES ( 1,
+           1,
+           1,
+           'T001',
+           'credit_card',
+           TO_DATE('15-03-2026', 'DD-MM-YYYY'),
+           10.01 );
+
+Display whole table:
+
+SELECT
+*
+FROM
+    PROJECTCAMPAIGNREV;
+
+SELECT
+*
+FROM
+    PROJECTUSERREV;
+
+SELECT
+*
+FROM
+    PROJECTTRANSACTIONREV;
+
+Create a new user:
+
+INSERT INTO PROJECTUSERREV (
+    USER_ID,
+    FIRST_NAME,
+    LAST_NAME,
+    PASSWORD_HASH,
+    ROLE
+) VALUES ( 5,
+           'Bill',
+           'Purrin',
+           'password123',
+           'user' );
+
+INSERT INTO PROJECTEMAILREV (
+    USER_ID,
+    EMAIL
+) VALUES ( 5,
+           'billyp1@gmail.com' );
+
+INSERT INTO PROJECTEMAILREV (
+    USER_ID,
+    EMAIL
+) VALUES ( 5,
+           'billygoat1@gmail.com' );
+
+INSERT INTO PROJECTSOCIALMEDIAREV (
+    USER_ID,
+    SOCIALMEDIA
+) VALUES ( 5,
+           'billybilly@facebook.com' );
+
+Admin creates a new campaign:
+
+INSERT INTO PROJECTCAMPAIGNREV (
+    CAMPAIGN_ID,
+    START_DATE,
+    END_DATE,
+    FUNDING_GOAL,
+    FUNDING_RECEIVED,
+) VALUES ( 3,
+           TO_DATE('31-03-2026', 'DD-MM-YYYY'),
+           TO_DATE('16-06-2026', 'DD-MM-YYYY'),
+           100.01,
+           1.01;
+
+INSERT INTO PROJECTCAMPAIGNTITLEREV (
+    CAMPAIGN_ID,
+    TITLE,
+    DESCRIPTION
+) VALUES ( 3,
+           'Better Living through Tacos',
+           'The sequel to my self-help book Insights on Extra Cheese. Better Living through Tacos explores the fast-food versus fine-dining taco in us all. I request donations from the small but dedicated food-based self-help book lovers.');
+
+User makes a new donation for a campaign:
+
+INSERT INTO PROJECTTRANSACTIONREV (
+    TRANSACTION_ID,
+    CAMPAIGN_ID,
+    USER_ID,
+    AUTHORIZATION_NUM,
+    PAYMENT_TYPE,
+    PAYMENT_DATE,
+    AMOUNT
+) VALUES ( 4,
+           3,
+           5,
+           'TACO4',
+           'billy_credit_card',
+           TO_DATE('31-03-2026', 'DD-MM-YYYY'),
+           5.01 );
+
+Admin removing an unneeded column from PROJECTCAMPAIGN:
+
+ALTER TABLE PROJECTCAMPAIGNREV 
+DROP COLUMN funding_received;
+
+User changes email:
+
+UPDATE PROJECTEMAILREV
+SET email = 'billynewemail@gmail.com'
+WHERE email = 'billyp1@gmail.com';
+
+Admin changes campaign end-date:
+
+UPDATE PROJECTCAMPAIGNREV
+SET end_date = TO_DATE('30-06-2026', 'DD-MM-YYYY')
+WHERE campaign_id = 3;
+
+Admin attempts to delete a user: (Note: this fails, and we want it to)
+
+DELETE FROM PROJECTUSERREV
+WHERE user_id = 5;
+
+Admin attempts to delete a campaign: (Note: this fails, and we want it to)
+
+DELETE FROM PROJECTCAMPAIGNREV
+WHERE campaign_id = 3;
+
+Admin queries the full name of the users:
+
+SELECT first_name || ' ' || last_name AS full_name
+FROM PROJECTUSERREV;
+
+Admin queries the total donations for a campaign:
+
+SELECT sum(amount) total_donations
+FROM PROJECTTRANSACTIONREV
+WHERE campaign_id = 3;
+
+User asks to list their donation amounts and dates
+
+SELECT amount, payment_date
+FROM PROJECTTRANSACTIONREV
+WHERE user_id = 5;
+
+Insert connecting values into PROJECTUSERCAMPAIGN:
+
+INSERT INTO PROJECTUSERCAMPAIGNREV (
+    CAMPAIGN_ID,
+    USER_ID
+) VALUES ( 3,
+           5);
+
+Display user first and last name with the amount donated by them
+
+SELECT first_name, last_name, amount FROM PROJECTUSERREV, PROJECTTRANSACTIONREV
+WHERE PROJECTUSERREV.user_id = PROJECTTRANSACTIONREV.user_id;
+
+Display transaction amount with payment date and user last name
+
+SELECT amount, payment_date, last_name FROM PROJECTTRANSACTIONREV, PROJECTUSERREV
+WHERE PROJECTUSERREV.user_id = PROJECTTRANSACTIONREV.user_id;
+
+Display the user first and last name with the corresponding emails.
+
+SELECT first_name, last_name, email FROM PROJECTUSERREV, PROJECTEMAILREV
+WHERE PROJECTUSERREV.user_id = PROJECTEMAILREV.user_id;
+
+Display the user first and last name with the corresponding social medias.
+
+SELECT first_name, last_name, socialmedia FROM PROJECTUSERREV, PROJECTSOCIALMEDIAREV
+WHERE PROJECTUSERREV.user_id = PROJECTSOCIALMEDIAREV.user_id;
+
+Display users who donated amounts greater than 20 dollars
+
+SELECT first_name, last_name, amount FROM PROJECTUSERREV, PROJECTTRANSACTIONREV
+WHERE PROJECTUSERREV.user_id = PROJECTTRANSACTIONREV.user_id
+AND PROJECTTRANSACTIONREV.amount > 20;
